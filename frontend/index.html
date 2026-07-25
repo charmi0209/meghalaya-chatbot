@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meghalaya One — Scheme Chatbot</title>
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #0A3D62;
+      --gold:    #E8B84B;
+      --bg:      #F0F4F8;
+      --white:   #FFFFFF;
+      --green:   #2ECC71;
+      --red:     #E74C3C;
+      --text:    #1A1A2E;
+      --muted:   #6B7280;
+      --border:  #DDE3EA;
+      --radius:  12px;
+      --shadow:  0 2px 12px rgba(10,61,98,0.10);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Navbar ─── */
+    .navbar {
+      background: var(--blue);
+      color: var(--white);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .navbar-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--blue);
+    }
+
+    .navbar-title {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .navbar-subtitle {
+      font-size: 11px;
+      opacity: 0.75;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-status {
+      font-size: 12px;
+      background: rgba(255,255,255,0.15);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ─── Main Layout ─── */
+    .main {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+      position: sticky;
+      top: 60px;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .sidebar-search {
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .sidebar-search input:focus {
+      border-color: var(--blue);
+    }
+
+    .sidebar-search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .scheme-list {
+      flex: 1;
+      overflow-y: scroll;
+      padding: 8px;
+      min-height: 0;
+      height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: #0A3D62 #F0F4F8;
+    }
+
+    .scheme-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scheme-list::-webkit-scrollbar-track {
+      background: #F0F4F8;
+      border-radius: 10px;
+    }
+
+    .scheme-list::-webkit-scrollbar-thumb {
+      background: #0A3D62;
+      border-radius: 10px;
+    }
+
+    .scheme-list::-webkit-scrollbar-thumb:hover {
+      background: #0d4f7c;
+    }
+    /* Chrome, Edge, Safari scrollbar */
+    .scheme-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scheme-list::-webkit-scrollbar-track {
+      background: #F0F4F8;
+      border-radius: 10px;
+    }
+
+    .scheme-list::-webkit-scrollbar-thumb {
+      background: #0A3D62;
+      border-radius: 10px;
+    }
+
+    .scheme-list::-webkit-scrollbar-thumb:hover {
+      background: #0d4f7c;
+    }
+
+    .scheme-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: background 0.15s;
+      border: none;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+    }
+
+    .scheme-chip:hover {
+      background: var(--bg);
+    }
+
+    .scheme-chip.active {
+      background: #EBF3FA;
+      border-left: 3px solid var(--blue);
+    }
+
+    .scheme-chip-name {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .status-dot.open   { background: var(--green); }
+    .status-dot.closed { background: var(--red); }
+    .status-dot.unknown { background: var(--muted); }
+
+    /* ─── Chat Area ─── */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: calc(100vh - 60px);
+    }
+
+    .chat-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+    }
+
+    .chat-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    .chat-header p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: scroll;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+      height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: #DDE3EA #F0F4F8;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: #F0F4F8;
+      border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #DDE3EA;
+      border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #0A3D62;
+    }
+
+    /* ─── Welcome State ─── */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .welcome-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .welcome h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 400px;
+    }
+
+    .welcome-suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 24px;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .suggestion-btn {
+      padding: 10px 16px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .suggestion-btn:hover {
+      border-color: var(--blue);
+      background: #EBF3FA;
+    }
+
+    /* ─── Message Bubbles ─── */
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 80%;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+    }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+      background: var(--gold);
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .message.bot .message-avatar {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.6;
+      box-shadow: var(--shadow);
+    }
+
+    .message.user .message-bubble {
+      background: var(--blue);
+      color: var(--white);
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot .message-bubble {
+      background: var(--white);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-source {
+      font-size: 11px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .message-source a {
+      color: var(--blue);
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .message-source a:hover {
+      text-decoration: underline;
+    }
+
+    /* ─── Typing indicator ─── */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 14px 16px;
+      background: var(--white);
+      border-radius: var(--radius);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow);
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ─── Input Area ─── */
+    .chat-input-area {
+      padding: 16px 24px;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      color: var(--text);
+      min-height: 48px;
+      max-height: 120px;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+
+    .chat-input:focus {
+      border-color: var(--blue);
+    }
+
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover  { background: #0d4f7c; }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* ─── Markdown rendering ─── */
+    .message-bubble h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 12px 0 6px;
+      color: var(--blue);
+    }
+
+    .message-bubble h3:first-child { margin-top: 0; }
+
+    .message-bubble ul, .message-bubble ol {
+      padding-left: 20px;
+      margin: 6px 0;
+    }
+
+    .message-bubble li { margin-bottom: 4px; }
+
+    .message-bubble strong { font-weight: 600; }
+
+    .message-bubble p { margin-bottom: 8px; }
+    .message-bubble p:last-child { margin-bottom: 0; }
+
+    .message-bubble hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 10px 0;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .message { max-width: 95%; }
+    }
+
+    /* ─── Recommendation Panel ─── */
+    .recommend-btn {
+      background: var(--gold);
+      color: var(--blue);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 12px;
+      transition: background 0.15s;
+    }
+
+    .recommend-btn:hover { background: #d4a73a; }
+
+    .recommend-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .recommend-overlay.active { display: flex; }
+
+    .recommend-modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+
+    .recommend-modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .recommend-modal-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .recommend-modal-body { padding: 20px 24px; }
+
+    .profile-field {
+      margin-bottom: 14px;
+    }
+
+    .profile-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .profile-field input, .profile-field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    .profile-field input:focus, .profile-field select:focus {
+      border-color: var(--blue);
+    }
+
+    .recommend-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s;
+    }
+
+    .recommend-submit:hover { background: #0d4f7c; }
+    .recommend-submit:disabled { background: var(--muted); cursor: not-allowed; }
+
+    .recommend-results { margin-top: 20px; }
+
+    .recommend-card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--gold);
+    }
+
+    .recommend-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 4px;
+    }
+
+    .recommend-card-reason {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .recommend-card-ask {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--blue);
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="navbar-logo">M1</div>
+    <div>
+      <div class="navbar-title">Meghalaya One Chatbot</div>
+      <div class="navbar-subtitle">Government Scheme Assistant</div>
+    </div>
+  </div>
+  <div class="navbar-status" id="apiStatus">⚪ Connecting...</div>
+</nav>
+
+<!-- MAIN LAYOUT -->
+<div class="main">
+
+  <!-- SIDEBAR: list of all schemes -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>Available Schemes</h3>
+      <div class="sidebar-search">
+        <span class="sidebar-search-icon">🔍</span>
+        <input type="text" id="schemeSearch" placeholder="Search schemes..." />
+      </div>
+    </div>
+    <div class="scheme-list" id="schemeList">
+      <div style="padding:16px; color:var(--muted); font-size:13px;">Loading schemes...</div>
+    </div>
+  </aside>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+   <div class="chat-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2>Ask about any government scheme</h2>
+        <p>Get accurate answers about eligibility, documents, benefits, and how to apply</p>
+      </div>
+      <button class="recommend-btn" onclick="openRecommendModal()">
+        🎯 Find schemes for me
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <!-- Welcome state shown until first message -->
+      <div class="welcome" id="welcomeState">
+        <div class="welcome-icon">🏛️</div>
+        <h3>How can I help you today?</h3>
+        <p>Ask me anything about Meghalaya government schemes — eligibility, required documents, benefits, or how to apply.</p>
+        <div class="welcome-suggestions">
+          <button class="suggestion-btn" onclick="fillQuestion('Who is eligible for the Chief Ministers Green Taxi Scheme?')">
+            💬 Who is eligible for the Chief Ministers Green Taxi Scheme?
+          </button>
+          <button class="suggestion-btn" onclick="fillQuestion('What benefits does the Meghalaya Goat Farming Scheme offer?')">
+            💬 What benefits does the Meghalaya Goat Farming Scheme offer?
+          </button>
+          <button class="suggestion-btn" onclick="fillQuestion('How do I apply for the PRIME SEED Scheme?')">
+            💬 How do I apply for the PRIME SEED Scheme?
+          </button>
+          <button class="suggestion-btn" onclick="fillQuestion('What documents do I need for the homestay scheme?')">
+            💬 What documents do I need for the homestay scheme?
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="input-row">
+        <textarea
+          class="chat-input"
+          id="questionInput"
+          placeholder="Ask about any scheme — eligibility, documents, benefits..."
+          rows="1"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- RECOMMENDATION MODAL -->
+<div class="recommend-overlay" id="recommendOverlay" onclick="closeOnOverlay(event)">
+  <div class="recommend-modal">
+    <div class="recommend-modal-header">
+      <h3>🎯 Find schemes that match you</h3>
+      <button class="modal-close" onclick="closeRecommendModal()">✕</button>
+    </div>
+    <div class="recommend-modal-body">
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+        Tell us a bit about yourself and we'll suggest the most relevant schemes from all 13 available.
+      </p>
+
+      <div class="profile-field">
+        <label>Occupation / What do you do?</label>
+        <input type="text" id="prof-occupation" placeholder="e.g. farmer, taxi driver, homestay owner" />
+      </div>
+
+      <div class="profile-field">
+        <label>Category</label>
+        <select id="prof-category">
+          <option value="">Select category</option>
+          <option value="general">General</option>
+          <option value="BPL">BPL (Below Poverty Line)</option>
+          <option value="SC">SC (Scheduled Caste)</option>
+          <option value="ST">Scheduled Tribe</option>
+          <option value="OBC">OBC</option>
+          <option value="PwD">Person with Disability (PwD)</option>
+          <option value="woman">Woman entrepreneur</option>
+        </select>
+      </div>
+
+      <div class="profile-field">
+        <label>What are you interested in?</label>
+        <input type="text" id="prof-interest" placeholder="e.g. livestock, tourism, transport, agriculture" />
+      </div>
+
+      <div class="profile-field">
+        <label>Location (optional)</label>
+        <input type="text" id="prof-location" placeholder="e.g. Shillong, East Khasi Hills" />
+      </div>
+
+      <button class="recommend-submit" id="recommendSubmitBtn" onclick="getRecommendations()">
+        Find matching schemes →
+      </button>
+
+      <div class="recommend-results" id="recommendResults"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:5000";
+
+  // ─── On page load ───
+  window.addEventListener("DOMContentLoaded", () => {
+    checkHealth();
+    loadSchemes();
+    autoResizeTextarea();
+  });
+
+  // ─── Health check: updates the status indicator in the navbar ───
+  async function checkHealth() {
+    try {
+      const res = await fetch(`${API_BASE}/health`);
+      if (res.ok) {
+        document.getElementById("apiStatus").textContent = "🟢 Connected";
+        document.getElementById("apiStatus").style.background = "rgba(46,204,113,0.2)";
+      } else {
+        throw new Error();
+      }
+    } catch {
+      document.getElementById("apiStatus").textContent = "🔴 API Offline";
+      document.getElementById("apiStatus").style.background = "rgba(231,76,60,0.2)";
+    }
+  }
+
+  // ─── Load all scheme names into the sidebar ───
+  async function loadSchemes() {
+    try {
+      const res = await fetch(`${API_BASE}/schemes`);
+      const data = await res.json();
+      renderSchemes(data.schemes);
+    } catch {
+      document.getElementById("schemeList").innerHTML =
+        '<div style="padding:16px;color:var(--muted);font-size:13px;">Could not load schemes. Make sure Flask is running.</div>';
+    }
+  }
+
+  function renderSchemes(schemes) {
+    const list = document.getElementById("schemeList");
+    if (!schemes || schemes.length === 0) {
+      list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:13px;">No schemes found.</div>';
+      return;
+    }
+
+    // Clear the list first
+    list.innerHTML = "";
+
+    schemes.forEach(s => {
+      // Create button element properly instead of using innerHTML
+      // This avoids apostrophes breaking the onclick string
+      const btn = document.createElement("button");
+      btn.className = "scheme-chip";
+      btn.title = s.name;
+
+      // Use addEventListener instead of onclick attribute
+      // so apostrophes in names don't break anything
+      btn.addEventListener("click", () => {
+        fillQuestion(`Tell me about the ${s.name}`);
+      });
+
+      btn.innerHTML = `
+        <span class="scheme-chip-name">${s.name}</span>
+        <span class="status-dot ${getStatusClass(s.status)}" title="${s.status}"></span>
+      `;
+
+      list.appendChild(btn);
+    });
+  }
+
+  function getStatusClass(status) {
+    if (!status) return "unknown";
+    const s = status.toLowerCase();
+    if (s === "open")   return "open";
+    if (s === "closed") return "closed";
+    return "unknown";
+  }
+
+  // ─── Sidebar search filter ───
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("schemeSearch").addEventListener("input", function() {
+      const query = this.value.toLowerCase();
+      document.querySelectorAll(".scheme-chip").forEach(chip => {
+        const name = chip.querySelector(".scheme-chip-name").textContent.toLowerCase();
+        chip.style.display = name.includes(query) ? "flex" : "none";
+      });
+    });
+  });
+
+  // ─── Fill the input box (from sidebar click or suggestion button) ───
+  function fillQuestion(text) {
+    const input = document.getElementById("questionInput");
+    input.value = text;
+    input.focus();
+    autoResizeTextarea();
+  }
+
+  // ─── Auto-resize textarea as user types ───
+  function autoResizeTextarea() {
+    const input = document.getElementById("questionInput");
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 120) + "px";
+    });
+  }
+
+  // ─── Handle Enter key ───
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("questionInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  });
+
+  // ─── Send a message ───
+  async function sendMessage() {
+    const input = document.getElementById("questionInput");
+    const question = input.value.trim();
+    if (!question) return;
+
+    // Hide welcome state on first message
+    const welcome = document.getElementById("welcomeState");
+    if (welcome) welcome.remove();
+
+    // Show the user's message
+    appendMessage("user", question);
+    input.value = "";
+    input.style.height = "auto";
+
+    // Disable input while waiting
+    const sendBtn = document.getElementById("sendBtn");
+    sendBtn.disabled = true;
+    input.disabled = true;
+
+    // Show typing indicator
+    const typingId = showTyping();
+
+    try {
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+      const data = await res.json();
+
+      removeTyping(typingId);
+
+      if (data.success) {
+        appendMessage("bot", data.answer, data.source);
+      } else {
+        appendMessage("bot", `Sorry, something went wrong: ${data.error}`);
+      }
+    } catch (err) {
+      removeTyping(typingId);
+      appendMessage("bot", "I could not reach the server. Please make sure Flask is running on port 5000.");
+    }
+
+    sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
+
+  // ─── Append a message bubble to the chat ───
+  function appendMessage(role, text, source) {
+    const messages = document.getElementById("chatMessages");
+
+    const div = document.createElement("div");
+    div.className = `message ${role}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.textContent = role === "user" ? "U" : "🏛";
+
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+
+    // Convert basic markdown to HTML for bot messages
+    if (role === "bot") {
+      bubble.innerHTML = markdownToHtml(text);
+      if (source) {
+        const sourceDiv = document.createElement("div");
+        sourceDiv.className = "message-source";
+        sourceDiv.innerHTML = `📌 Source: <a href="${source}" target="_blank" rel="noopener">Official Government Page</a>`;
+        bubble.appendChild(sourceDiv);
+      }
+    } else {
+      bubble.textContent = text;
+    }
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    messages.appendChild(div);
+
+    // Scroll to latest message
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  // ─── Simple markdown to HTML converter ───
+  function markdownToHtml(text) {
+    return text
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/^#{1,6}\s+(.+)$/gm, "<h3>$1</h3>")
+      .replace(/^\* (.+)$/gm, "<li>$1</li>")
+      .replace(/^- (.+)$/gm, "<li>$1</li>")
+      .replace(/^\d+\.\s+(.+)$/gm, "<li>$1</li>")
+      .replace(/(<li>.*?<\/li>\n?)+/gs, m => `<ul>${m}</ul>`)
+      .replace(/^---$/gm, "<hr>")
+      .replace(/\n\n+/g, "</p><p>")
+      .replace(/^(?!<[hul\/]|<li|<hr)(.+)$/gm, "<p>$1</p>")
+      .replace(/<p><\/p>/g, "")
+      .replace(/<p>(<h[123]>)/g, "$1")
+      .replace(/(<\/h[123]>)<\/p>/g, "$1");
+  }
+  // ─── Typing indicator ───
+  function showTyping() {
+    const messages = document.getElementById("chatMessages");
+    const id = "typing-" + Date.now();
+
+    const div = document.createElement("div");
+    div.className = "message bot";
+    div.id = id;
+
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.textContent = "🏛";
+
+    const indicator = document.createElement("div");
+    indicator.className = "typing-indicator";
+    indicator.innerHTML = `
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    `;
+
+    div.appendChild(avatar);
+    div.appendChild(indicator);
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  // ─── Recommendation modal ───
+  function openRecommendModal() {
+    document.getElementById("recommendOverlay").classList.add("active");
+    document.getElementById("recommendResults").innerHTML = "";
+  }
+
+  function closeRecommendModal() {
+    document.getElementById("recommendOverlay").classList.remove("active");
+  }
+
+  function closeOnOverlay(e) {
+    if (e.target === document.getElementById("recommendOverlay")) {
+      closeRecommendModal();
+    }
+  }
+
+  async function getRecommendations() {
+    const occupation = document.getElementById("prof-occupation").value.trim();
+    const category   = document.getElementById("prof-category").value.trim();
+    const interest   = document.getElementById("prof-interest").value.trim();
+    const location   = document.getElementById("prof-location").value.trim();
+
+    if (!occupation && !interest) {
+      document.getElementById("recommendResults").innerHTML =
+        '<p style="color:var(--red);font-size:13px;">Please fill in at least your occupation or interest.</p>';
+      return;
+    }
+
+    const btn = document.getElementById("recommendSubmitBtn");
+    btn.disabled = true;
+    btn.textContent = "Finding schemes...";
+
+    document.getElementById("recommendResults").innerHTML =
+      '<p style="color:var(--muted);font-size:13px;margin-top:12px;">Analysing all 13 schemes for you...</p>';
+
+    const profile = {};
+    if (occupation) profile.occupation = occupation;
+    if (category)   profile.category   = category;
+    if (interest)   profile.interest   = interest;
+    if (location)   profile.location   = location;
+
+    try {
+      const res = await fetch(`${API_BASE}/recommend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile)
+      });
+      const data = await res.json();
+
+      if (data.success && data.recommendations.length > 0) {
+        const html = data.recommendations.map(r => `
+          <div class="recommend-card">
+            <div class="recommend-card-name">📋 ${r.name}</div>
+            <div class="recommend-card-reason">${r.reason}</div>
+            <button class="recommend-card-ask" onclick="askAboutScheme('${r.name.replace(/'/g, "\\'")}')">
+              Ask about this scheme →
+            </button>
+          </div>
+        `).join("");
+
+        document.getElementById("recommendResults").innerHTML =
+          `<p style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:12px;">
+            Top ${data.recommendations.length} schemes for you:
+          </p>${html}`;
+      } else {
+        document.getElementById("recommendResults").innerHTML =
+          '<p style="color:var(--muted);font-size:13px;margin-top:12px;">No matching schemes found. Try different keywords.</p>';
+      }
+
+    } catch (err) {
+      document.getElementById("recommendResults").innerHTML =
+        '<p style="color:var(--red);font-size:13px;margin-top:12px;">Could not reach the server. Make sure Flask is running.</p>';
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Find matching schemes →";
+  }
+
+  function askAboutScheme(schemeName) {
+    closeRecommendModal();
+    fillQuestion(`Tell me about the ${schemeName}`);
+    document.getElementById("questionInput").focus();
+  }
+  
+</script>
+</body>
+</html>
