@@ -21,7 +21,19 @@ def health():
         "status": "ok",
         "message": "Meghalaya Scheme Chatbot API is running"
     })
-
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({
+        "name": "Meghalaya Scheme Chatbot API",
+        "status": "running",
+        "endpoints": {
+            "health": "/health",
+            "schemes": "/schemes",
+            "chat": "POST /chat",
+            "recommend": "POST /recommend",
+            "logs": "/logs"
+        }
+    })
 
 # ─── Get all schemes ───
 @app.route("/schemes", methods=["GET"])
