@@ -11,8 +11,12 @@ from database import get_connection
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, origins=[
+    "https://charmi0209.github.io",
+    "http://localhost:5500",
+    "http://localhost:5000",
+    "http://127.0.0.1:5500"
+])
 
 # ─── Health check ───
 @app.route("/health", methods=["GET"])
