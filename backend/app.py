@@ -13,7 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, origins=[
     "https://charmi0209.github.io",
-    "https://meghalaya-chatbot-frontend.onrender.com",
+    "https://meghalaya-scheme-chatbot.onrender.com",
     "http://localhost:5500",
     "http://localhost:5000",
     "http://127.0.0.1:5500"
